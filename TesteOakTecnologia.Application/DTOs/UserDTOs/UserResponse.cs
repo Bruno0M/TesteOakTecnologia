@@ -2,5 +2,9 @@
 {
     public record UserResponse(
         string Name,
-        string Email);
+        string Email,
+        string Token)
+    {
+        public UserResponse(string Name, string Email) : this(Name, Email, string.Empty) { }
+    }
 }

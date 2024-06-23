@@ -7,6 +7,6 @@ namespace TesteOakTecnologia.Infrastructure.Interfaces
     {
         Task<ServiceResponse<UserResponse>> CreateUserAsync(UserRequest userRequest);
         Task<ServiceResponse<UserResponse>> LoginUserAsync(UserLoginRequest loginRequest);
-        Task<ServiceResponse<UserResponse>> GetUserAsync(int userId);
+        Task<ServiceResponse<List<UserResponse>>> GetUserAsync(int userId);
     }
 }

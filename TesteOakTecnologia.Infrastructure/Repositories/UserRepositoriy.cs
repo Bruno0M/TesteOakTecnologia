@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using TesteOakTecnologia.Application.DTOs.ProductDTOs;
 using TesteOakTecnologia.Application.DTOs.UserDTOs;
 using TesteOakTecnologia.Domain.Entities;
 using TesteOakTecnologia.Infrastructure.Data;
@@ -11,26 +15,28 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
     public class UserRepositoriy : IUserRepository
     {
         private readonly AppDbContext _context;
+        private readonly ITokenRepository _tokenRepository;
 
-        public UserRepositoriy(AppDbContext context)
+        public UserRepositoriy(AppDbContext context, ITokenRepository tokenRepository)
         {
             _context = context;
+            _tokenRepository = tokenRepository;
         }
 
         public async Task<ServiceResponse<UserResponse>> CreateUserAsync(UserRequest userRequest)
         {
-            var serviceResponse = new ServiceResponse<UserResponse>();
+            ServiceResponse<UserResponse> response = new();
             try
             {
-                var verifyUserExist = await _context.Users
-                    .FirstOrDefaultAsync(user => user.Email == userRequest.Email);
+                IQueryable<User> verifyUserExist = _context.Users
+                    .Where(u => u.Email == userRequest.Email);
 
                 if (verifyUserExist != null)
                 {
-                    serviceResponse.Data = null;
-                    serviceResponse.Message = "This Email is already registered";
-                    serviceResponse.Status = HttpStatusCode.BadRequest;
-                    return serviceResponse;
+                    response.Data = null;
+                    response.Message = "This Email is already registered";
+                    response.Status = HttpStatusCode.BadRequest;
+                    return response;
                 };
 
                 HashingHelper.CreateHashPassword(userRequest.Password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -38,6 +44,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                 var user = new User
                 {
                     Name = userRequest.Name,
+                    Email = userRequest.Email,
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt,
                 };
@@ -49,54 +56,82 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                serviceResponse.Data = userResponse;
-                serviceResponse.Message = "User successfully created";
-                serviceResponse.Status = HttpStatusCode.OK;
+                response.Data = userResponse;
+                response.Message = "User successfully created";
+                response.Status = HttpStatusCode.OK;
             }
             catch (Exception ex)
             {
-                serviceResponse.Message = ex.Message;
+                response.Message = ex.Message;
             }
 
-            return serviceResponse;
+            return response;
         }
 
 
-        public Task<ServiceResponse<UserResponse>> LoginUserAsync(UserLoginRequest loginRequest)
+        public async Task<ServiceResponse<UserResponse>> LoginUserAsync(UserLoginRequest loginRequest)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<ServiceResponse<UserResponse>> GetUserAsync(int userId)
-        {
-            var serviceResponse = new ServiceResponse<UserResponse>();
-
+            ServiceResponse<UserResponse> response = new();
             try
             {
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await _context.Users.FirstOrDefaultAsync(u =>  u.Email == loginRequest.Email);
 
-                if (user == null)
+                if (user == null || !HashingHelper.VerifyPassword(loginRequest.Password, user.PasswordHash, user.PasswordSalt))
                 {
-                    serviceResponse.Data = null;
-                    serviceResponse.Message = "User not found";
-                    serviceResponse.Status = HttpStatusCode.NotFound;
-                    return serviceResponse;
+                    response.Data = null;
+                    response.Message = "Invalid Credentials";
+                    response.Status = HttpStatusCode.BadRequest;
+                    return response;
                 }
+
+                string token = _tokenRepository.GenerateToken(user);
 
                 var userResponse = new UserResponse(
                     user.Name,
-                    user.Email);
+                    user.Email,
+                    token);
 
-                serviceResponse.Data = userResponse;
-                serviceResponse.Status = HttpStatusCode.OK;
+                response.Data = userResponse;
+                response.Message = "Login successful";
+                response.Status = HttpStatusCode.OK;
             }
             catch (Exception ex)
             {
-                serviceResponse.Message = ex.Message;
+                response.Message = ex.Message;
             }
 
-            return serviceResponse;
+            return response;
+        }
+
+        public async Task<ServiceResponse<List<UserResponse>>> GetUserAsync(int userId)
+        {
+            ServiceResponse<List<UserResponse>> response = new();
+
+            try
+            {
+                IQueryable<User> user = _context.Users.Where(u => u.Id == userId).AsQueryable();
+
+                if (user == null)
+                {
+                    response.Data = null;
+                    response.Message = "User not found";
+                    response.Status = HttpStatusCode.NotFound;
+                    return response;
+                }
+
+                var userResponse = await user.Select(u => new UserResponse(
+                    u.Name,
+                    u.Email)).ToListAsync();
+
+                response.Data = userResponse;
+                response.Status = HttpStatusCode.OK;
+            }
+            catch (Exception ex)
+            {
+                response.Message = ex.Message;
+            }
+
+            return response;
         }
 
     }

@@ -10,6 +10,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["TesteOakTecnologia.API/TesteOakTecnologia.API.csproj", "TesteOakTecnologia.API/"]
+COPY ["TesteOakTecnologia.Application/TesteOakTecnologia.Application.csproj", "TesteOakTecnologia.Application/"]
+COPY ["TesteOakTecnologia.Domain/TesteOakTecnologia.Domain.csproj", "TesteOakTecnologia.Domain/"]
+COPY ["TesteOakTecnologia.Infrastructure/TesteOakTecnologia.Infrastructure.csproj", "TesteOakTecnologia.Infrastructure/"]
 RUN dotnet restore "./TesteOakTecnologia.API/TesteOakTecnologia.API.csproj"
 COPY . .
 WORKDIR "/src/TesteOakTecnologia.API"
