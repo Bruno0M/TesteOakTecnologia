@@ -27,7 +27,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = GenerateClaims(user),
-                Expires = DateTime.UtcNow.AddMinutes(5),
+                Expires = DateTime.UtcNow.AddMinutes(50),
                 SigningCredentials = keyCredentials
             };
 
