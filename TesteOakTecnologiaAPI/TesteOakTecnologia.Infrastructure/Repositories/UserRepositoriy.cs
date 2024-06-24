@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-using TesteOakTecnologia.Application.DTOs.ProductDTOs;
 using TesteOakTecnologia.Application.DTOs.UserDTOs;
 using TesteOakTecnologia.Domain.Entities;
 using TesteOakTecnologia.Infrastructure.Data;
