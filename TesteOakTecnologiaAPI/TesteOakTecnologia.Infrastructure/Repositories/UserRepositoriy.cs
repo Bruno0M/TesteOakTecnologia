@@ -50,6 +50,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
 
                 var userResponse = new UserResponse(
+                    user.Id,
                     user.Name,
                     user.Email);
 
@@ -84,6 +85,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                 string token = _tokenRepository.GenerateToken(user);
 
                 var userResponse = new UserResponse(
+                    user.Id,
                     user.Name,
                     user.Email,
                     token);
@@ -117,6 +119,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                 }
 
                 var userResponse = await user.Select(u => new UserResponse(
+                    u.Id,
                     u.Name,
                     u.Email)).ToListAsync();
 

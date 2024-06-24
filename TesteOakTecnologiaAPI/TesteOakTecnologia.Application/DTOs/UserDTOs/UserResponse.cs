@@ -1,10 +1,11 @@
 ﻿namespace TesteOakTecnologia.Application.DTOs.UserDTOs
 {
     public record UserResponse(
+        int UserId,
         string Name,
         string Email,
         string Token)
     {
-        public UserResponse(string Name, string Email) : this(Name, Email, string.Empty) { }
+        public UserResponse(int UserId, string Name, string Email) : this(UserId, Name, Email, string.Empty) { }
     }
 }
