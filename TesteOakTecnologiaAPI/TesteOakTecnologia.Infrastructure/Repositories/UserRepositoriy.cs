@@ -24,10 +24,10 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
             ServiceResponse<UserResponse> response = new();
             try
             {
-                IQueryable<User> verifyUserExist = _context.Users
-                    .Where(u => u.Email == userRequest.Email);
+                bool userExists = await _context.Users
+                    .AnyAsync(u => u.Email == userRequest.Email);
 
-                if (verifyUserExist != null)
+                if (userExists)
                 {
                     response.Data = null;
                     response.Message = "This Email is already registered";
@@ -45,12 +45,13 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
                     PasswordSalt = passwordSalt,
                 };
 
-                var userResponse = new UserResponse(
-                    user.Name,
-                    user.Email);
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
+                var userResponse = new UserResponse(
+                    user.Name,
+                    user.Email);
 
                 response.Data = userResponse;
                 response.Message = "User successfully created";
@@ -70,7 +71,7 @@ namespace TesteOakTecnologia.Infrastructure.Repositories
             ServiceResponse<UserResponse> response = new();
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u =>  u.Email == loginRequest.Email);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email);
 
                 if (user == null || !HashingHelper.VerifyPassword(loginRequest.Password, user.PasswordHash, user.PasswordSalt))
                 {
